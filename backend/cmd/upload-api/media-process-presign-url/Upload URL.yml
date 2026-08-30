@@ -1,0 +1,47 @@
+info:
+  name: Upload URL
+  type: http
+  seq: 1
+
+http:
+  method: PUT
+  url: https://media-pipeline-dev-raw.s3.ap-southeast-1.amazonaws.com/raw/dc5778f0-86b9-44d3-9ef0-8932a2e7268c/photo.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA54K323P7NCIREK2C%2F20260816%2Fap-southeast-1%2Fs3%2Faws4_request&X-Amz-Date=20260816T015600Z&X-Amz-Expires=900&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFoaDmFwLXNvdXRoZWFzdC0xIkgwRgIhAJIGcjeOZ0L6FHfS2y2tCj79FjOPCTXDk%2B%2FcrM06QN7oAiEApShe1k7EvJl%2BApJUwmDLCQH89cEpSbbnHtDCAEVQWoQqmgQIIxABGgw5NTQyMTIyMTE3MTAiDLpffbXeO7gtiUHY9yr3A3zfdURVb4tjG8y2kcMDcSMceR9hFtqsuGpngQg%2FF2iqhcy8smTE2McagmJoVjL6RM4zrV2OT7mClHPPQpupS7idCIZw8zir4SOZe%2FII%2BppAZmtnyETzey4a2BaxPb6jkvLcsU4taB2Uboxx2%2F%2B69lwNUWDEBLnO4WnMs9a%2BzWEvsxl1eXKgRHIqS%2B2X%2Bo8BFKJ6f8lxkh59yETWo66EXSNMF1pgq29U9WY8dK4mN6JqtscndRc33S9PvWRe16tVN2%2B2WrKB0%2F9ejfKBSmuz%2BpdGbcC9ngdsj77Q%2FXrMnbSypnCmqVcSMSNdK58NqG%2BGIzXbMdan8mQmyQ9zxwJ7jqcqoR9jsQym7X9Yr%2BwJLH%2FB6fdBFne7jjO3B99mHnu7PtUNxoPeOsluBYl3WfSPreW7uVcgdBgrgQR9N1HqqJ53jOxg63ha2Yz1xC9pb4ztztxG%2BtgwU%2Fixk7vNaj%2BVYjmxpnUMkgU8F5bVazX7m5lnEbvu0Uf7HmAmAXabRoah5JEqjQsM66esB5VUFR4qyMASoTaOdYzs7ZZ2%2B0IlbfOrALol5sBTXwe9jLNF%2BTFFkmdWxVA0EuzkEoAFtSQAGJux1hoTbwIH2UdohZax8nKDClqJNyPv0rRpReQx03UGUsWCwhSI0vKMqvhydnl92sHryJTF1W9HMLCxhNQGOqEBzCUxtES%2Fx3hoWK0on4kIRLgS6e0AZwojJiT2IAbciBN2AopZk%2FVgCk9%2B1KWheVzvj4zbMTvhjwlxoTexZuyuA72g8UzFyiTdpoFCALMEVjLUQIyXiNxt4P10XK744SBpXDAzVCEzaIKu8CH4epzRAR7nvefmi5pGqgDfWhXGRSKR2sLZKSR2Ned9swxE1Ri0%2B%2B5fYHU3UN3TnrXJJduBAuo%3D&X-Amz-SignedHeaders=host&x-id=PutObject&X-Amz-Signature=8406b45555fc876819198bad64e7a386806a189b2319b51a2483948e07060190
+  params:
+    - name: X-Amz-Algorithm
+      value: AWS4-HMAC-SHA256
+      type: query
+    - name: X-Amz-Credential
+      value: ASIA54K323P7NCIREK2C%2F20260816%2Fap-southeast-1%2Fs3%2Faws4_request
+      type: query
+    - name: X-Amz-Date
+      value: 20260816T015600Z
+      type: query
+    - name: X-Amz-Expires
+      value: "900"
+      type: query
+    - name: X-Amz-Security-Token
+      value: IQoJb3JpZ2luX2VjEFoaDmFwLXNvdXRoZWFzdC0xIkgwRgIhAJIGcjeOZ0L6FHfS2y2tCj79FjOPCTXDk%2B%2FcrM06QN7oAiEApShe1k7EvJl%2BApJUwmDLCQH89cEpSbbnHtDCAEVQWoQqmgQIIxABGgw5NTQyMTIyMTE3MTAiDLpffbXeO7gtiUHY9yr3A3zfdURVb4tjG8y2kcMDcSMceR9hFtqsuGpngQg%2FF2iqhcy8smTE2McagmJoVjL6RM4zrV2OT7mClHPPQpupS7idCIZw8zir4SOZe%2FII%2BppAZmtnyETzey4a2BaxPb6jkvLcsU4taB2Uboxx2%2F%2B69lwNUWDEBLnO4WnMs9a%2BzWEvsxl1eXKgRHIqS%2B2X%2Bo8BFKJ6f8lxkh59yETWo66EXSNMF1pgq29U9WY8dK4mN6JqtscndRc33S9PvWRe16tVN2%2B2WrKB0%2F9ejfKBSmuz%2BpdGbcC9ngdsj77Q%2FXrMnbSypnCmqVcSMSNdK58NqG%2BGIzXbMdan8mQmyQ9zxwJ7jqcqoR9jsQym7X9Yr%2BwJLH%2FB6fdBFne7jjO3B99mHnu7PtUNxoPeOsluBYl3WfSPreW7uVcgdBgrgQR9N1HqqJ53jOxg63ha2Yz1xC9pb4ztztxG%2BtgwU%2Fixk7vNaj%2BVYjmxpnUMkgU8F5bVazX7m5lnEbvu0Uf7HmAmAXabRoah5JEqjQsM66esB5VUFR4qyMASoTaOdYzs7ZZ2%2B0IlbfOrALol5sBTXwe9jLNF%2BTFFkmdWxVA0EuzkEoAFtSQAGJux1hoTbwIH2UdohZax8nKDClqJNyPv0rRpReQx03UGUsWCwhSI0vKMqvhydnl92sHryJTF1W9HMLCxhNQGOqEBzCUxtES%2Fx3hoWK0on4kIRLgS6e0AZwojJiT2IAbciBN2AopZk%2FVgCk9%2B1KWheVzvj4zbMTvhjwlxoTexZuyuA72g8UzFyiTdpoFCALMEVjLUQIyXiNxt4P10XK744SBpXDAzVCEzaIKu8CH4epzRAR7nvefmi5pGqgDfWhXGRSKR2sLZKSR2Ned9swxE1Ri0%2B%2B5fYHU3UN3TnrXJJduBAuo%3D
+      type: query
+    - name: X-Amz-SignedHeaders
+      value: host
+      type: query
+    - name: x-id
+      value: PutObject
+      type: query
+    - name: X-Amz-Signature
+      value: 8406b45555fc876819198bad64e7a386806a189b2319b51a2483948e07060190
+      type: query
+  body:
+    type: file
+    data:
+      - filePath: /Users/nguyenquocthinh/Pictures/a925a704ee3f8aa2594017fe3c4a221c.png
+        contentType: image/png
+        selected: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+​

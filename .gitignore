@@ -1,0 +1,66 @@
+###############################################################################
+# OS / Editor
+###############################################################################
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/settings.json
+.idea/
+*.iml
+
+###############################################################################
+# Frontend — Next.js / Node
+###############################################################################
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/.pnpm-store/
+
+###############################################################################
+# Backend — Go
+###############################################################################
+backend/build/
+# compiled test binaries
+*.test
+# Go workspace (if used locally)
+go.work
+go.work.sum
+
+###############################################################################
+# Terraform
+###############################################################################
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfplan
+terraform/crash.log
+terraform/override.tf
+terraform/override.tf.json
+terraform/*_override.tf
+terraform/*_override.tf.json
+
+###############################################################################
+# Secrets / credentials
+###############################################################################
+*.pem
+*.key
+*.crt
+.env
+.env.local
+.envrc
+
+###############################################################################
+# Misc build / cache artefacts
+###############################################################################
+dist/
+*.zip
+*.tar.gz

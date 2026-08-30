@@ -1,0 +1,36 @@
+# Copy this file to terraform.tfvars and fill in values before running apply.
+# terraform.tfvars is git-ignored — never commit real values.
+
+project     = "media-pipeline"
+environment = "dev"
+aws_region  = "ap-southeast-1"
+
+# ── Phase 1: Storage ────────────────────────────────────────────────────────
+# Allow destroying buckets with objects during dev iteration.
+raw_bucket_force_destroy    = true
+output_bucket_force_destroy = true
+
+# Delete raw uploads after 7 days.
+raw_expiry_days = 7
+
+# CloudFront — PriceClass_100 is cheapest (US + EU edges only).
+cloudfront_price_class = "PriceClass_100"
+
+# CORS: lock to your frontend origin in staging/prod.
+cors_allowed_origins = ["http://localhost:3000"]
+
+# ── Phase 1: Database ────────────────────────────────────────────────────────
+# Disable PITR in dev to reduce cost; enable in staging and prod.
+enable_pitr  = false
+job_ttl_days = 30
+
+# ── Phase 2: Compute ─────────────────────────────────────────────────────────
+# Lambda memory: 256 MB is sufficient for the upload API (no media processing).
+upload_api_memory_mb   = 256
+upload_api_timeout_sec = 30
+
+# Max upload size accepted by the presign endpoint (500 MB).
+max_upload_bytes = 524288000
+
+# Log retention: 14 days in dev; increase to 30-90 in prod.
+log_retention_days = 14
