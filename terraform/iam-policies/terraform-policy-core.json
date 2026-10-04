@@ -134,7 +134,11 @@
       "Effect": "Allow",
       "Action": [
         "lambda:ListFunctions",
-        "lambda:ListEventSourceMappings"
+        "lambda:ListEventSourceMappings",
+        "lambda:GetEventSourceMapping",
+        "lambda:CreateEventSourceMapping",
+        "lambda:UpdateEventSourceMapping",
+        "lambda:DeleteEventSourceMapping"
       ],
       "Resource": "*"
     },

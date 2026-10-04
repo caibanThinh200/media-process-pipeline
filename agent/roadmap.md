@@ -82,12 +82,12 @@ Do not begin the next phase until the current gate passes.
 - [x] Security groups block all direct access to Lambda; ALB is the only ingress
 - [x] Health check on ALB returns 200 from the upload API
 
-### Gate 6 — Video + Polish
-- [ ] Video files trigger the video-worker Lambda, not the image-worker
-- [ ] FFmpeg layer is attached; transcoded output appears in the output bucket
-- [ ] DLQ alarm fires in CloudWatch when a message lands in the dead-letter queue
-- [ ] X-Ray traces show the full path: API → SQS → Worker → S3
-- [ ] CloudWatch dashboard exists with key metrics for all Lambdas
+### Gate 6 — Video + Polish ✅
+- [x] Video files trigger the video-worker Lambda, not the image-worker
+- [x] FFmpeg layer is attached; transcoded output appears in the output bucket
+- [x] DLQ alarm fires in CloudWatch when a message lands in the dead-letter queue
+- [x] X-Ray traces show the full path: API → SQS → Worker → S3
+- [x] CloudWatch dashboard exists with key metrics for all Lambdas
 
 ## Cross-cutting concerns (apply in every phase)
 

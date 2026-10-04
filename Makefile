@@ -4,7 +4,7 @@ POLICY_DIR   := terraform/iam-policies
 
 .PHONY: policy-update-core policy-update-platform policy-list-versions \
         build-upload-api build-image-worker test-unit deploy-phase3 \
-        frontend-dev frontend-build
+        frontend-dev frontend-build e2e-install e2e e2e-headed
 
 ## policy-update-core: push a new default version of the Core policy (run from project root)
 policy-update-core:
@@ -84,3 +84,15 @@ frontend-dev:
 ## frontend-build: build the Next.js production bundle
 frontend-build:
 	. ~/.nvm/nvm.sh && nvm use 22 && cd frontend && pnpm build
+
+## e2e-install: install Playwright + Chromium for the browser-only E2E suite
+e2e-install:
+	. ~/.nvm/nvm.sh && nvm use 22 && cd e2e && pnpm install && pnpm install:browsers
+
+## e2e: run browser E2E against the real deployed stack (optional E2E_VIDEO_FILE=clip.mp4, E2E_BASE_URL=...)
+e2e:
+	. ~/.nvm/nvm.sh && nvm use 22 && cd e2e && pnpm test
+
+## e2e-headed: same as e2e but with a visible browser
+e2e-headed:
+	. ~/.nvm/nvm.sh && nvm use 22 && cd e2e && pnpm test:headed

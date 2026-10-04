@@ -136,8 +136,6 @@ module "networking" {
   az_count          = var.az_count
   upload_lambda_arn = module.compute.upload_api_lambda_arn
   certificate_arn   = var.certificate_arn
-
-  depends_on = [module.compute]
 }
 
 ##############################################################################

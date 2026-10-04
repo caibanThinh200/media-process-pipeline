@@ -299,8 +299,8 @@ The project is structured around six delivery phases, each with explicit accepta
 | 2 | **Upload Flow** | ✅ Complete | `POST /upload/presign` Lambda, API Gateway HTTP API, presigned S3 PUT URL, job creation |
 | 3 | **Async Pipeline** | ✅ Complete | SQS queue + DLQ, S3 event trigger, image-worker Lambda with idempotency |
 | 4 | **Frontend** | ✅ Complete | Next.js upload page, drag-and-drop, live status polling, gallery, error handling |
-| 5 | **Networking Layer** | 🔜 Planned | VPC, ALB, private subnets, security groups |
-| 6 | **Video + Polish** | 🔜 Planned | FFmpeg Lambda layer, video transcoding, CloudWatch alarms, X-Ray tracing |
+| 5 | **Networking Layer** | ✅ Complete | VPC, ALB, private subnets, security groups |
+| 6 | **Video + Polish** | ✅ Complete | FFmpeg Lambda layer, video transcoding, CloudWatch alarms, X-Ray tracing |
 
 ---
 
