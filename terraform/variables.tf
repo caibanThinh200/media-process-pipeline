@@ -124,3 +124,54 @@ variable "image_worker_timeout_sec" {
   type        = number
   default     = 30
 }
+
+###############################################################################
+# Phase 5 — Networking: VPC + ALB
+###############################################################################
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC (e.g. 10.0.0.0/16)"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "az_count" {
+  description = "Number of Availability Zones to use for subnets (1–3)"
+  type        = number
+  default     = 2
+}
+
+variable "certificate_arn" {
+  description = "ACM certificate ARN for HTTPS on the ALB. Leave empty for HTTP-only (dev)."
+  type        = string
+  default     = ""
+}
+
+###############################################################################
+# Phase 6 — Video Worker & Observability
+###############################################################################
+
+variable "video_worker_memory_mb" {
+  description = "Lambda memory for the video-worker in MB (128–10240)"
+  type        = number
+  default     = 1024
+}
+
+variable "video_worker_timeout_sec" {
+  description = "Lambda timeout for the video-worker in seconds (max 900)"
+  type        = number
+  default     = 300
+}
+
+variable "video_worker_ephemeral_storage_mb" {
+  description = "Ephemeral storage (/tmp) for video transcoding in MB (512-10240)"
+  type        = number
+  default     = 2048
+}
+
+variable "alarm_topic_arn" {
+  description = "Optional SNS topic ARN for CloudWatch alarm notifications"
+  type        = string
+  default     = ""
+}
+

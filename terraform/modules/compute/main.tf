@@ -107,6 +107,17 @@ data "aws_iam_policy_document" "upload_api" {
     actions = ["sqs:SendMessage"]
     resources = [var.queue_arn]
   }
+
+  # AWS X-Ray tracing
+  statement {
+    sid    = "XRay"
+    effect = "Allow"
+    actions = [
+      "xray:PutTraceSegments",
+      "xray:PutTelemetryRecords",
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "upload_api" {
@@ -132,6 +143,10 @@ resource "aws_lambda_function" "upload_api" {
   handler       = "bootstrap"
   memory_size   = var.upload_api_memory_mb
   timeout       = var.upload_api_timeout_sec
+
+  tracing_config {
+    mode = "Active"
+  }
 
   environment {
     variables = {
@@ -232,4 +247,12 @@ resource "aws_lambda_permission" "apigw" {
   function_name = aws_lambda_function.upload_api.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
+}
+
+# Allow ALB to invoke the Lambda (used by the networking module target group)
+resource "aws_lambda_permission" "alb" {
+  statement_id  = "AllowALBInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.upload_api.function_name
+  principal     = "elasticloadbalancing.amazonaws.com"
 }

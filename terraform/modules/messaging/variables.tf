@@ -9,9 +9,15 @@ variable "environment" {
 }
 
 variable "visibility_timeout_seconds" {
-  description = "SQS visibility timeout — must be >= the worker Lambda timeout"
+  description = "SQS visibility timeout for image queue — must be >= worker Lambda timeout"
   type        = number
   default     = 300
+}
+
+variable "video_visibility_timeout_seconds" {
+  description = "SQS visibility timeout for video queue — must be >= video worker Lambda timeout"
+  type        = number
+  default     = 900 # 15 minutes for transcoding
 }
 
 variable "message_retention_seconds" {

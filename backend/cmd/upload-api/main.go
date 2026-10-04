@@ -57,7 +57,6 @@ var (
 )
 
 func init() {
-	// Read configurable max upload size from environment.
 	if v := os.Getenv("MAX_UPLOAD_BYTES"); v != "" {
 		if n, err := strconv.ParseInt(v, 10, 64); err == nil && n > 0 {
 			maxUploadBytes = n
@@ -83,36 +82,90 @@ func init() {
 	}
 }
 
-// handler is the Lambda entry point for API Gateway HTTP API (v2) events.
-func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-	method := req.RequestContext.HTTP.Method
-	path := req.RawPath
+// normalizedRequest is a source-agnostic view of an incoming Lambda invocation,
+// populated from either an API Gateway v2 or ALB event.
+type normalizedRequest struct {
+	method string
+	path   string
+	body   string
+}
+
+// normalizeEvent detects the event source and extracts method, path, and body.
+// API Gateway v2 events have a "requestContext.http" field.
+// ALB events have a top-level "httpMethod" field.
+func normalizeEvent(raw json.RawMessage) (normalizedRequest, error) {
+	// Probe for ALB event shape (has top-level "httpMethod")
+	var probe struct {
+		HTTPMethod string `json:"httpMethod"`
+	}
+	if err := json.Unmarshal(raw, &probe); err != nil {
+		return normalizedRequest{}, fmt.Errorf("unmarshal probe: %w", err)
+	}
+
+	if probe.HTTPMethod != "" {
+		// ALB target group event
+		var albReq events.ALBTargetGroupRequest
+		if err := json.Unmarshal(raw, &albReq); err != nil {
+			return normalizedRequest{}, fmt.Errorf("unmarshal ALB event: %w", err)
+		}
+		return normalizedRequest{
+			method: albReq.HTTPMethod,
+			path:   albReq.Path,
+			body:   albReq.Body,
+		}, nil
+	}
+
+	// API Gateway HTTP API v2 event
+	var apigwReq events.APIGatewayV2HTTPRequest
+	if err := json.Unmarshal(raw, &apigwReq); err != nil {
+		return normalizedRequest{}, fmt.Errorf("unmarshal APIGW v2 event: %w", err)
+	}
+	return normalizedRequest{
+		method: apigwReq.RequestContext.HTTP.Method,
+		path:   apigwReq.RawPath,
+		body:   apigwReq.Body,
+	}, nil
+}
+
+// handler is the Lambda entry point. It accepts a raw JSON event, detects the source
+// (API Gateway v2 or ALB), normalizes it, and routes to the appropriate handler.
+// Returns events.ALBTargetGroupResponse — its JSON shape (statusCode, headers, body,
+// isBase64Encoded) is read correctly by both ALB and API Gateway v2.
+func handler(ctx context.Context, raw json.RawMessage) (events.ALBTargetGroupResponse, error) {
+	nr, err := normalizeEvent(raw)
+	if err != nil {
+		log.Printf("normalizeEvent error: %v", err)
+		return jsonResp(http.StatusBadRequest, map[string]string{"error": "bad request"}), nil
+	}
+
+	log.Printf("method=%s path=%s", nr.method, nr.path)
 
 	switch {
-	case method == http.MethodPost && path == "/upload/presign":
-		return handlePresign(ctx, req)
+	case nr.method == http.MethodPost && nr.path == "/upload/presign":
+		return handlePresign(ctx, nr)
 
-	case method == http.MethodGet && strings.HasPrefix(path, "/jobs/"):
-		jobID := strings.TrimPrefix(path, "/jobs/")
+	case nr.method == http.MethodGet && strings.HasPrefix(nr.path, "/jobs/"):
+		jobID := strings.TrimPrefix(nr.path, "/jobs/")
 		return handleGetJob(ctx, jobID)
 
-	case method == http.MethodGet && path == "/jobs":
+	case nr.method == http.MethodGet && nr.path == "/jobs":
 		return handleListJobs(ctx)
+
+	case nr.method == http.MethodGet && nr.path == "/health":
+		return jsonResp(http.StatusOK, map[string]string{"status": "ok"}), nil
 
 	default:
 		return jsonResp(http.StatusNotFound, map[string]string{"error": "not found"}), nil
 	}
 }
 
-// handlePresign validates the request, generates a presigned PUT URL, writes a PENDING job
-// record to DynamoDB, and enqueues the job to SQS.
-func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+// handlePresign validates the request, generates a presigned PUT URL, and writes a PENDING job record.
+func handlePresign(ctx context.Context, nr normalizedRequest) (events.ALBTargetGroupResponse, error) {
 	var body PresignRequest
-	if err := json.Unmarshal([]byte(req.Body), &body); err != nil {
+	if err := json.Unmarshal([]byte(nr.body), &body); err != nil {
 		return jsonResp(http.StatusBadRequest, map[string]string{"error": "invalid JSON body"}), nil
 	}
 
-	// --- Input validation ---
 	if strings.TrimSpace(body.FileName) == "" {
 		return jsonResp(http.StatusBadRequest, map[string]string{"error": "fileName is required"}), nil
 	}
@@ -129,7 +182,12 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 	}
 
 	jobID := uuid.NewString()
-	objectKey := fmt.Sprintf("raw/%s/%s", jobID, body.FileName)
+	var objectKey string
+	if body.FileType == "video" {
+		objectKey = fmt.Sprintf("raw/videos/%s/%s", jobID, body.FileName)
+	} else {
+		objectKey = fmt.Sprintf("raw/images/%s/%s", jobID, body.FileName)
+	}
 	now := time.Now().UTC()
 
 	presignURL, err := storageClient.PresignPutObject(ctx, objectKey, presignTTL)
@@ -155,8 +213,7 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 
 	// NOTE: Do NOT enqueue to SQS here. The image-worker is triggered by the
 	// S3 event notification on the raw bucket (raw/ prefix PUT), which fires
-	// only after the client completes the presigned PUT upload. Enqueueing here
-	// causes a race: the worker would try to GetObject before the file exists.
+	// only after the client completes the presigned PUT upload.
 
 	log.Printf("jobId=%s objectKey=%s fileType=%s sizeBytes=%d status=PENDING presign_ok=true",
 		jobID, objectKey, body.FileType, body.SizeBytes)
@@ -170,7 +227,7 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 }
 
 // handleGetJob looks up a single job by ID — used by the frontend polling loop.
-func handleGetJob(ctx context.Context, jobID string) (events.APIGatewayV2HTTPResponse, error) {
+func handleGetJob(ctx context.Context, jobID string) (events.ALBTargetGroupResponse, error) {
 	if strings.TrimSpace(jobID) == "" {
 		return jsonResp(http.StatusBadRequest, map[string]string{"error": "jobId is required"}), nil
 	}
@@ -188,7 +245,7 @@ func handleGetJob(ctx context.Context, jobID string) (events.APIGatewayV2HTTPRes
 }
 
 // handleListJobs returns all jobs — for dev/debug use only (full table scan).
-func handleListJobs(ctx context.Context) (events.APIGatewayV2HTTPResponse, error) {
+func handleListJobs(ctx context.Context) (events.ALBTargetGroupResponse, error) {
 	jobs, err := dbClient.ListJobs(ctx)
 	if err != nil {
 		return jsonResp(http.StatusInternalServerError, map[string]string{"error": "failed to list jobs"}), nil
@@ -196,13 +253,16 @@ func handleListJobs(ctx context.Context) (events.APIGatewayV2HTTPResponse, error
 	return jsonResp(http.StatusOK, jobs), nil
 }
 
-// jsonResp serialises body to JSON and returns an API Gateway v2 HTTP response.
-func jsonResp(statusCode int, body any) events.APIGatewayV2HTTPResponse {
+// jsonResp builds a response compatible with both ALB and API Gateway v2.
+// ALBTargetGroupResponse is accepted by both invocation sources.
+func jsonResp(statusCode int, body any) events.ALBTargetGroupResponse {
 	b, _ := json.Marshal(body)
-	return events.APIGatewayV2HTTPResponse{
-		StatusCode: statusCode,
-		Headers:    map[string]string{"Content-Type": "application/json"},
-		Body:       string(b),
+	return events.ALBTargetGroupResponse{
+		StatusCode:        statusCode,
+		StatusDescription: http.StatusText(statusCode),
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		Body:              string(b),
+		IsBase64Encoded:   false,
 	}
 }
 

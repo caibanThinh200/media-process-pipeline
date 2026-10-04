@@ -34,3 +34,17 @@ max_upload_bytes = 524288000
 
 # Log retention: 14 days in dev; increase to 30-90 in prod.
 log_retention_days = 14
+
+# ── Phase 5: Networking ───────────────────────────────────────────────────────
+# VPC CIDR block — keep the default unless you have an existing VPC to peer with.
+vpc_cidr = "10.0.0.0/16"
+
+# Number of AZs to use (1 for cheapest dev, 2+ for HA staging/prod).
+az_count = 2
+
+# ACM certificate ARN for HTTPS on the ALB.
+# Leave empty string to use HTTP-only (fine for dev/test).
+# For prod: create a cert in ACM, validate DNS, then paste the ARN here.
+# certificate_arn = "arn:aws:acm:ap-southeast-1:123456789012:certificate/xxxx"
+certificate_arn = ""
+

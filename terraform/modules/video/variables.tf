@@ -10,7 +10,7 @@ variable "environment" {
 
 # Storage
 variable "raw_bucket_name" {
-  description = "Name of the raw S3 bucket (source for image-worker)."
+  description = "Name of the raw S3 bucket."
   type        = string
 }
 
@@ -20,7 +20,7 @@ variable "raw_bucket_arn" {
 }
 
 variable "output_bucket_name" {
-  description = "Name of the output S3 bucket (destination for processed media)."
+  description = "Name of the output S3 bucket."
   type        = string
 }
 
@@ -41,39 +41,40 @@ variable "dynamodb_table_arn" {
 }
 
 # Messaging
-variable "queue_url" {
-  description = "SQS media queue URL (QUEUE_URL env var for image-worker)."
-  type        = string
-}
-
-variable "queue_arn" {
-  description = "SQS media queue ARN (event source mapping + IAM)."
+variable "video_queue_url" {
+  description = "SQS video processing queue URL."
   type        = string
 }
 
 variable "video_queue_arn" {
-  description = "Optional video SQS queue ARN for S3 bucket notifications"
+  description = "SQS video processing queue ARN."
   type        = string
-  default     = ""
 }
 
-variable "video_queue_url" {
-  description = "Optional video SQS queue URL for S3 bucket notification policy"
+# Layer
+variable "ffmpeg_layer_zip_path" {
+  description = "Path to the pre-packaged FFmpeg layer zip."
   type        = string
   default     = ""
 }
 
 # Tuning
-variable "image_worker_memory_mb" {
-  description = "Memory allocated to the image-worker Lambda (MB)."
+variable "video_worker_memory_mb" {
+  description = "Memory allocated to video-worker Lambda (MB)."
   type        = number
-  default     = 256
+  default     = 1024
 }
 
-variable "image_worker_timeout_sec" {
-  description = "Timeout for the image-worker Lambda (seconds)."
+variable "video_worker_timeout_sec" {
+  description = "Timeout for video-worker Lambda (seconds)."
   type        = number
-  default     = 30
+  default     = 300
+}
+
+variable "video_worker_ephemeral_storage_mb" {
+  description = "Ephemeral storage (/tmp) for video transcoding (MB)."
+  type        = number
+  default     = 2048
 }
 
 variable "log_retention_days" {

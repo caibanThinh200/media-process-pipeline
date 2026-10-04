@@ -93,3 +93,62 @@ output "image_worker_function_name" {
   description = "Image-worker Lambda function name"
   value       = module.async.image_worker_function_name
 }
+
+###############################################################################
+# Phase 5 — Networking outputs
+###############################################################################
+
+output "alb_dns_name" {
+  description = "ALB DNS name — use as API_BASE_URL in staging/prod (replaces direct APIGW URL)"
+  value       = module.networking.alb_dns_name
+}
+
+output "vpc_id" {
+  description = "VPC ID created by the networking module"
+  value       = module.networking.vpc_id
+}
+
+output "alb_arn" {
+  description = "ARN of the Application Load Balancer"
+  value       = module.networking.alb_arn
+}
+
+###############################################################################
+# Phase 6 — Video Worker & Observability outputs
+###############################################################################
+
+output "video_worker_function_name" {
+  description = "Video-worker Lambda function name"
+  value       = module.video.video_worker_function_name
+}
+
+output "video_queue_url" {
+  description = "URL of the SQS video processing queue"
+  value       = module.messaging.video_queue_url
+}
+
+output "video_dlq_url" {
+  description = "URL of the video dead-letter queue"
+  value       = module.messaging.video_dlq_url
+}
+
+output "cloudwatch_dashboard_url" {
+  description = "Direct URL to the CloudWatch overview dashboard"
+  value       = module.observability.dashboard_url
+}
+
+output "image_dlq_alarm_arn" {
+  description = "ARN of the CloudWatch alarm for image DLQ"
+  value       = module.observability.image_dlq_alarm_arn
+}
+
+output "video_dlq_alarm_arn" {
+  description = "ARN of the CloudWatch alarm for video DLQ"
+  value       = module.observability.video_dlq_alarm_arn
+}
+
+output "xray_group_arn" {
+  description = "ARN of the AWS X-Ray group"
+  value       = module.observability.xray_group_arn
+}
+

@@ -1,3 +1,5 @@
+export PATH := /usr/local/go/bin:$(PATH)
+
 GOOS    ?= linux
 GOARCH  ?= arm64
 OUTDIR  := build

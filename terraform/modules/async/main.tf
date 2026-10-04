@@ -118,6 +118,17 @@ data "aws_iam_policy_document" "image_worker" {
     ]
     resources = [var.queue_arn]
   }
+
+  # AWS X-Ray tracing
+  statement {
+    sid    = "XRay"
+    effect = "Allow"
+    actions = [
+      "xray:PutTraceSegments",
+      "xray:PutTelemetryRecords",
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "image_worker" {
@@ -143,6 +154,10 @@ resource "aws_lambda_function" "image_worker" {
   handler       = "bootstrap"
   memory_size   = var.image_worker_memory_mb
   timeout       = var.image_worker_timeout_sec
+
+  tracing_config {
+    mode = "Active"
+  }
 
   environment {
     variables = {
@@ -184,11 +199,7 @@ resource "aws_lambda_event_source_mapping" "sqs_to_image_worker" {
 }
 
 ##############################################################################
-# S3 → SQS event notification (raw bucket PUT → queue)
-#
-# This is a secondary trigger for resilience: if the upload-api's SQS send
-# fails, the S3 notification ensures the job is still processed.
-# Filter: only objects under raw/ prefix.
+# S3 → SQS event notifications (raw/images/* -> image queue, raw/videos/* -> video queue)
 ##############################################################################
 
 data "aws_iam_policy_document" "sqs_s3_notification" {
@@ -200,7 +211,7 @@ data "aws_iam_policy_document" "sqs_s3_notification" {
       identifiers = ["s3.amazonaws.com"]
     }
     actions   = ["sqs:SendMessage"]
-    resources = [var.queue_arn]
+    resources = [var.queue_arn, var.video_queue_arn]
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
@@ -214,15 +225,30 @@ resource "aws_sqs_queue_policy" "s3_notification" {
   policy    = data.aws_iam_policy_document.sqs_s3_notification.json
 }
 
+resource "aws_sqs_queue_policy" "video_s3_notification" {
+  queue_url = var.video_queue_url
+  policy    = data.aws_iam_policy_document.sqs_s3_notification.json
+}
+
 resource "aws_s3_bucket_notification" "raw_to_sqs" {
   bucket = var.raw_bucket_name
 
   queue {
-    id            = "raw-upload-to-sqs"
+    id            = "raw-images-to-sqs"
     queue_arn     = var.queue_arn
     events        = ["s3:ObjectCreated:Put"]
-    filter_prefix = "raw/"
+    filter_prefix = "raw/images/"
   }
 
-  depends_on = [aws_sqs_queue_policy.s3_notification]
+  queue {
+    id            = "raw-videos-to-sqs"
+    queue_arn     = var.video_queue_arn
+    events        = ["s3:ObjectCreated:Put"]
+    filter_prefix = "raw/videos/"
+  }
+
+  depends_on = [
+    aws_sqs_queue_policy.s3_notification,
+    aws_sqs_queue_policy.video_s3_notification
+  ]
 }

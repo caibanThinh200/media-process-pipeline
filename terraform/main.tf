@@ -112,8 +112,10 @@ module "async" {
   dynamodb_table_arn  = module.database.jobs_table_arn
 
   # Messaging
-  queue_url = module.messaging.queue_url
-  queue_arn = module.messaging.queue_arn
+  queue_url       = module.messaging.image_queue_url
+  queue_arn       = module.messaging.image_queue_arn
+  video_queue_url = module.messaging.video_queue_url
+  video_queue_arn = module.messaging.video_queue_arn
 
   # Tuning
   image_worker_memory_mb   = var.image_worker_memory_mb
@@ -122,5 +124,69 @@ module "async" {
 }
 
 ##############################################################################
-# Phase 5 — Networking      → modules/networking (coming next)
+# Phase 5 — Networking (VPC + ALB → Lambda target group)
 ##############################################################################
+
+module "networking" {
+  source      = "./modules/networking"
+  project     = var.project
+  environment = var.environment
+
+  vpc_cidr          = var.vpc_cidr
+  az_count          = var.az_count
+  upload_lambda_arn = module.compute.upload_api_lambda_arn
+  certificate_arn   = var.certificate_arn
+
+  depends_on = [module.compute]
+}
+
+##############################################################################
+# Phase 6 — Video Worker & Observability
+##############################################################################
+
+module "video" {
+  source      = "./modules/video"
+  project     = var.project
+  environment = var.environment
+
+  # Storage
+  raw_bucket_name    = module.storage.raw_bucket_name
+  raw_bucket_arn     = module.storage.raw_bucket_arn
+  output_bucket_name = module.storage.output_bucket_name
+  output_bucket_arn  = module.storage.output_bucket_arn
+
+  # Database
+  dynamodb_table_name = module.database.jobs_table_name
+  dynamodb_table_arn  = module.database.jobs_table_arn
+
+  # Messaging
+  video_queue_url = module.messaging.video_queue_url
+  video_queue_arn = module.messaging.video_queue_arn
+
+  # Tuning
+  video_worker_memory_mb            = var.video_worker_memory_mb
+  video_worker_timeout_sec          = var.video_worker_timeout_sec
+  video_worker_ephemeral_storage_mb = var.video_worker_ephemeral_storage_mb
+  log_retention_days                = var.log_retention_days
+}
+
+module "observability" {
+  source      = "./modules/observability"
+  project     = var.project
+  environment = var.environment
+  aws_region  = var.aws_region
+
+  # Lambdas
+  upload_api_function_name   = module.compute.upload_api_function_name
+  image_worker_function_name = module.async.image_worker_function_name
+  video_worker_function_name = module.video.video_worker_function_name
+
+  # Queues & DLQs
+  image_queue_name = module.messaging.image_queue_name
+  video_queue_name = module.messaging.video_queue_name
+  image_dlq_name   = module.messaging.image_dlq_name
+  video_dlq_name   = module.messaging.video_dlq_name
+
+  # Notifications
+  alarm_topic_arn = var.alarm_topic_arn
+}

@@ -49,6 +49,14 @@ build-upload-api:
 build-image-worker:
 	$(MAKE) -C backend build-image-worker
 
+## build-video-worker: compile the video-worker Lambda binary for Linux arm64
+build-video-worker:
+	$(MAKE) -C backend build-video-worker
+
+## build-ffmpeg-layer: package the ARM64 FFmpeg Lambda layer zip
+build-ffmpeg-layer:
+	./scripts/build-ffmpeg-layer.sh
+
 ## test-unit: run all Go unit tests (no AWS credentials required)
 test-unit:
 	cd backend && /usr/local/go/bin/go test ./... -v -count=1

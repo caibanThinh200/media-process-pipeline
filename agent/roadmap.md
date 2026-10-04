@@ -76,11 +76,11 @@ Do not begin the next phase until the current gate passes.
 - [x] Gallery shows processed image from CloudFront URL
 - [x] Error states are displayed for upload failures and job failures
 
-### Gate 5 — Networking Layer
-- [ ] VPC with public and private subnets exists in `terraform apply`
-- [ ] ALB is reachable on HTTPS and routes to the upload Lambda via target group
-- [ ] Security groups block all direct access to Lambda; ALB is the only ingress
-- [ ] Health check on ALB returns 200 from the upload API
+### Gate 5 — Networking Layer ✅
+- [x] VPC with public and private subnets exists in `terraform apply`
+- [x] ALB is reachable on HTTP and routes to the upload Lambda via target group
+- [x] Security groups block all direct access to Lambda; ALB is the only ingress
+- [x] Health check on ALB returns 200 from the upload API
 
 ### Gate 6 — Video + Polish
 - [ ] Video files trigger the video-worker Lambda, not the image-worker
