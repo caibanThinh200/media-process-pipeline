@@ -1,0 +1,55 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CostExplorerRead",
+      "Effect": "Allow",
+      "Action": [
+        "ce:GetCostAndUsage",
+        "ce:GetCostAndUsageWithResources",
+        "ce:GetCostForecast",
+        "ce:GetUsageForecast",
+        "ce:GetDimensionValues",
+        "ce:GetTags",
+        "ce:GetCostCategories",
+        "ce:GetReservationUtilization",
+        "ce:GetSavingsPlansUtilization",
+        "ce:DescribeCostCategoryDefinition",
+        "ce:ListCostCategoryDefinitions",
+        "ce:GetAnomalies",
+        "ce:GetAnomalyMonitors",
+        "ce:GetAnomalySubscriptions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "BillingConsoleRead",
+      "Effect": "Allow",
+      "Action": [
+        "aws-portal:ViewBilling",
+        "aws-portal:ViewUsage",
+        "billing:GetBillingData",
+        "billing:GetBillingView",
+        "billing:ListBillingViews",
+        "cur:DescribeReportDefinitions",
+        "freetier:GetFreeTierUsage"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "BudgetsManage",
+      "Effect": "Allow",
+      "Action": [
+        "budgets:ViewBudget",
+        "budgets:ModifyBudget"
+      ],
+      "Resource": "arn:aws:budgets::954212211710:budget/*"
+    },
+    {
+      "Sid": "BudgetsList",
+      "Effect": "Allow",
+      "Action": "budgets:DescribeBudgetActionsForAccount",
+      "Resource": "*"
+    }
+  ]
+}

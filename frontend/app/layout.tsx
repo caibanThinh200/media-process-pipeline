@@ -1,7 +1,16 @@
 import type { Metadata } from "next";
+import { Barlow } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "../lib/utils";
+
+const barlow = Barlow({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-barlow",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Media Pipeline — Upload & Process",
@@ -15,15 +24,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-background text-foreground">
+    <html lang="en" className={`dark ${barlow.variable}`}>
+      <body className={cn('min-h-screen', 'text-foreground')}>
         {/* ── Navigation ── */}
-        <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <header className={cn('sticky', 'top-0', 'z-50', 'border-border/60', 'backdrop-blur-md')}>
+          <div className={cn('mx-auto', 'flex', 'h-14', 'max-w-6xl', 'items-center', 'justify-between', 'px-4', 'sm:px-6')}>
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2.5 font-semibold tracking-tight text-foreground transition-opacity hover:opacity-80"
+              className={cn('flex', 'items-center', 'gap-2.5', 'font-semibold', 'tracking-tight', 'text-foreground', 'transition-opacity', 'hover:opacity-80')}
             >
               {/* Cloud + spark icon */}
               <svg
@@ -34,7 +43,7 @@ export default function RootLayout({
                 strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="h-5 w-5 text-primary"
+                className={cn('h-5', 'w-5', 'text-primary')}
                 aria-hidden="true"
               >
                 <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
@@ -44,18 +53,18 @@ export default function RootLayout({
             </Link>
 
             {/* Nav links */}
-            <nav className="flex items-center gap-1" aria-label="Primary navigation">
+            <nav className={cn('flex', 'items-center', 'gap-1')} aria-label="Primary navigation">
               <Link
                 href="/"
                 id="nav-upload"
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className={cn('rounded-md', 'px-3', 'py-1.5', 'text-sm', 'font-medium', 'text-muted-foreground', 'transition-colors', 'hover:bg-muted', 'hover:text-foreground')}
               >
                 Upload
               </Link>
               <Link
                 href="/gallery"
                 id="nav-gallery"
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className={cn('rounded-md', 'px-3', 'py-1.5', 'text-sm', 'font-medium', 'text-muted-foreground', 'transition-colors', 'hover:bg-muted', 'hover:text-foreground')}
               >
                 Gallery
               </Link>
@@ -64,13 +73,13 @@ export default function RootLayout({
         </header>
 
         {/* ── Page content ── */}
-        <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <main className={cn('mx-auto', 'max-w-6xl', 'px-4', 'py-8', 'sm:px-6')}>
           {children}
         </main>
 
         {/* ── Footer ── */}
-        <footer className="mt-16 border-t border-border/40 py-6 text-center text-xs text-muted-foreground">
-          <Separator className="mb-6 opacity-30" />
+        <footer className={cn('mt-16', 'border-t', 'border-border/40', 'py-6', 'text-center', 'text-xs', 'text-muted-foreground')}>
+          <Separator className={cn('mb-6', 'opacity-30')} />
           MediaPipeline · AWS S3 · Lambda · CloudFront
         </footer>
       </body>

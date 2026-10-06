@@ -122,22 +122,22 @@ export function MediaCard({ jobId, status, fileType, outputUrl, createdAt }: Med
         <div className="flex items-center justify-between gap-2">
           <Badge
             variant="outline"
-            className={cn("border text-[10px] font-medium", STATUS_BADGE[status])}
+            className={cn("border text-xs font-medium", STATUS_BADGE[status])}
           >
             {STATUS_LABEL[status]}
           </Badge>
-          <span className="rounded bg-muted/50 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span className="rounded bg-muted/50 px-2 py-0.5 text-xs uppercase tracking-wider text-muted-foreground">
             {fileType}
           </span>
         </div>
       </CardContent>
 
       <CardFooter className="flex flex-col items-start gap-0.5 px-3 pb-3 pt-0">
-        <p className="font-mono text-[10px] text-muted-foreground/60">
+        <p className="font-mono text-xs text-muted-foreground/80">
           {jobId.slice(0, 8)}…
         </p>
         <time
-          className="text-[10px] text-muted-foreground/50"
+          className="text-sm text-muted-foreground/70"
           dateTime={createdAt}
           title={new Date(createdAt).toLocaleString()}
         >

@@ -1,6 +1,6 @@
 module github.com/nguyenquocthinh/media-processing-pipeline
 
-go 1.22
+go 1.26.0
 
 require (
 	github.com/aws/aws-lambda-go v1.47.0
@@ -10,7 +10,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.34.0
+	github.com/gen2brain/webp v0.6.4
 	github.com/google/uuid v1.6.0
+	golang.org/x/image v0.46.0
 )
 
 require (
@@ -31,5 +33,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.22.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.27.0 // indirect
 	github.com/aws/smithy-go v1.20.3 // indirect
+	github.com/ebitengine/purego v0.10.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 )

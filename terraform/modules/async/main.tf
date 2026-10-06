@@ -143,7 +143,7 @@ resource "aws_iam_role_policy" "image_worker" {
 
 resource "aws_lambda_function" "image_worker" {
   function_name = "${local.name_prefix}-image-worker"
-  description   = "Consumes SQS jobs, copies raw media to output bucket, updates job status"
+  description   = "Consumes SQS jobs, optimizes images (resize, watermark, WebP), updates job status"
   role          = aws_iam_role.image_worker.arn
 
   filename         = data.archive_file.image_worker.output_path
@@ -164,6 +164,13 @@ resource "aws_lambda_function" "image_worker" {
       RAW_BUCKET     = var.raw_bucket_name
       OUTPUT_BUCKET  = var.output_bucket_name
       DYNAMODB_TABLE = var.dynamodb_table_name
+
+      # Image optimization (see backend/internal/imageproc)
+      MAX_DIMENSION     = "1920"
+      WEBP_QUALITY      = "80"
+      WATERMARK_ENABLED = "true"
+      WATERMARK_TEXT    = "tAI"
+      WATERMARK_OPACITY = "0.5"
     }
   }
 

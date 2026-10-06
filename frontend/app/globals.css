@@ -6,7 +6,7 @@
 
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
+    --font-sans: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -124,6 +124,14 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 15% 0%, oklch(0.62 0.22 264 / 28%), transparent 60%),
+      radial-gradient(ellipse 70% 60% at 90% 100%, oklch(0.68 0.22 300 / 24%), transparent 60%),
+      linear-gradient(135deg, oklch(0.14 0.04 270), oklch(0.11 0.03 285));
+    background-attachment: fixed;
+    background-repeat: no-repeat;
   }
   html {
     @apply font-sans;

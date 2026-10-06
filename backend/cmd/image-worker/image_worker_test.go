@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"image"
+	"image/color"
+	"image/jpeg"
 	"io"
 	"strings"
 	"testing"
@@ -77,16 +81,18 @@ func (f *fakeDB) UpdateJobStatusWithOutputKey(_ context.Context, jobID, status, 
 
 // fakeStorage satisfies StorageClientIface.
 type fakeStorage struct {
-	objects     map[string][]byte // objectKey → bytes
-	written     map[string][]byte // outputKey → bytes written by PutOutputObject
-	forceGetErr error
-	forcePutErr error
+	objects      map[string][]byte // objectKey → bytes
+	written      map[string][]byte // outputKey → bytes written by PutOutputObject
+	contentTypes map[string]string // outputKey → content type
+	forceGetErr  error
+	forcePutErr  error
 }
 
 func newFakeStorage(objects map[string][]byte) *fakeStorage {
 	return &fakeStorage{
-		objects: objects,
-		written: make(map[string][]byte),
+		objects:      objects,
+		written:      make(map[string][]byte),
+		contentTypes: make(map[string]string),
 	}
 }
 
@@ -101,11 +107,12 @@ func (f *fakeStorage) GetObject(_ context.Context, key string) (io.ReadCloser, e
 	return io.NopCloser(strings.NewReader(string(data))), nil
 }
 
-func (f *fakeStorage) PutOutputObject(_ context.Context, key string, body []byte, _ string) error {
+func (f *fakeStorage) PutOutputObject(_ context.Context, key string, body []byte, contentType string) error {
 	if f.forcePutErr != nil {
 		return f.forcePutErr
 	}
 	f.written[key] = body
+	f.contentTypes[key] = contentType
 	return nil
 }
 
@@ -310,6 +317,67 @@ func TestProcessRecord_FailedPutOutput(t *testing.T) {
 		if fdb.statusHistory[i] != want {
 			t.Errorf("status[%d]: got %q, want %q", i, fdb.statusHistory[i], want)
 		}
+	}
+}
+
+// TestProcessRecord_OptimizesToWebP — a real image is converted to WebP with
+// the .webp key and image/webp content type.
+func TestProcessRecord_OptimizesToWebP(t *testing.T) {
+	jobID := "job-webp"
+	objectKey := "raw/job-webp/photo.jpg"
+
+	img := image.NewNRGBA(image.Rect(0, 0, 200, 100))
+	for y := 0; y < 100; y++ {
+		for x := 0; x < 200; x++ {
+			img.SetNRGBA(x, y, color.NRGBA{uint8(x), uint8(y), 128, 255})
+		}
+	}
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, img, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	fdb := newFakeDB(&models.Job{JobID: jobID, Status: models.StatusPending})
+	fst := newFakeStorage(map[string][]byte{objectKey: buf.Bytes()})
+
+	body := fmt.Sprintf(`{"jobId":"%s","objectKey":"%s","fileType":"image"}`, jobID, objectKey)
+	if err := processRecord(context.Background(), sqsRecord(body), fdb, fst); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	wantKey := "output/job-webp/photo.webp"
+	if _, ok := fst.written[wantKey]; !ok {
+		t.Fatalf("expected output at %q; written keys: %v", wantKey, keys(fst.written))
+	}
+	if ct := fst.contentTypes[wantKey]; ct != "image/webp" {
+		t.Errorf("content type = %q, want image/webp", ct)
+	}
+	if fdb.jobs[jobID].OutputKey != wantKey {
+		t.Errorf("outputKey in DB = %q, want %q", fdb.jobs[jobID].OutputKey, wantKey)
+	}
+}
+
+// TestProcessRecord_FallbackPassthrough — undecodable input is copied as-is
+// and the job still completes.
+func TestProcessRecord_FallbackPassthrough(t *testing.T) {
+	jobID := "job-fallback"
+	objectKey := "raw/job-fallback/file.bin"
+	raw := []byte("definitely not an image")
+
+	fdb := newFakeDB(&models.Job{JobID: jobID, Status: models.StatusPending})
+	fst := newFakeStorage(map[string][]byte{objectKey: raw})
+
+	body := fmt.Sprintf(`{"jobId":"%s","objectKey":"%s","fileType":"image"}`, jobID, objectKey)
+	if err := processRecord(context.Background(), sqsRecord(body), fdb, fst); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	wantKey := "output/job-fallback/file.bin"
+	if string(fst.written[wantKey]) != string(raw) {
+		t.Errorf("expected passthrough bytes at %q", wantKey)
+	}
+	if fdb.jobs[jobID].Status != models.StatusComplete {
+		t.Errorf("status = %q, want COMPLETE", fdb.jobs[jobID].Status)
 	}
 }
 

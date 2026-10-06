@@ -128,6 +128,7 @@ module "async" {
 ##############################################################################
 
 module "networking" {
+  count       = var.enable_networking ? 1 : 0
   source      = "./modules/networking"
   project     = var.project
   environment = var.environment

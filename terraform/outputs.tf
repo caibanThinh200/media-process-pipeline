@@ -100,17 +100,17 @@ output "image_worker_function_name" {
 
 output "alb_dns_name" {
   description = "ALB DNS name — use as API_BASE_URL in staging/prod (replaces direct APIGW URL)"
-  value       = module.networking.alb_dns_name
+  value       = try(module.networking[0].alb_dns_name, null)
 }
 
 output "vpc_id" {
   description = "VPC ID created by the networking module"
-  value       = module.networking.vpc_id
+  value       = try(module.networking[0].vpc_id, null)
 }
 
 output "alb_arn" {
   description = "ARN of the Application Load Balancer"
-  value       = module.networking.alb_arn
+  value       = try(module.networking[0].alb_arn, null)
 }
 
 ###############################################################################

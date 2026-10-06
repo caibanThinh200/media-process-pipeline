@@ -129,6 +129,12 @@ variable "image_worker_timeout_sec" {
 # Phase 5 — Networking: VPC + ALB
 ###############################################################################
 
+variable "enable_networking" {
+  description = "Create the VPC + ALB (Gate 5). ALB (~$16/mo) and its public IPv4s (~$7/mo) cost money 24/7; set false in dev to save cost."
+  type        = bool
+  default     = false
+}
+
 variable "vpc_cidr" {
   description = "CIDR block for the VPC (e.g. 10.0.0.0/16)"
   type        = string

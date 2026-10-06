@@ -6,15 +6,59 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"path"
+	"strconv"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 
 	"github.com/nguyenquocthinh/media-processing-pipeline/internal/db"
+	"github.com/nguyenquocthinh/media-processing-pipeline/internal/imageproc"
 	"github.com/nguyenquocthinh/media-processing-pipeline/internal/models"
 	"github.com/nguyenquocthinh/media-processing-pipeline/internal/storage"
 )
+
+// optimizeFunc is swappable in tests.
+var optimizeFunc = imageproc.Optimize
+
+// loadOptions builds imageproc options from environment variables.
+//
+//	WATERMARK_ENABLED (default true), WATERMARK_TEXT (default "tAI"),
+//	WATERMARK_OPACITY (default 0.5), MAX_DIMENSION (default 1920),
+//	WEBP_QUALITY (default 80).
+func loadOptions() imageproc.Options {
+	opts := imageproc.Options{
+		Watermark:        true,
+		WatermarkText:    "tAI",
+		WatermarkOpacity: imageproc.DefaultOpacity,
+	}
+	if v := os.Getenv("WATERMARK_ENABLED"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			opts.Watermark = b
+		}
+	}
+	if v := os.Getenv("WATERMARK_TEXT"); v != "" {
+		opts.WatermarkText = v
+	}
+	if v := os.Getenv("WATERMARK_OPACITY"); v != "" {
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			opts.WatermarkOpacity = f
+		}
+	}
+	if v := os.Getenv("MAX_DIMENSION"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			opts.MaxDimension = n
+		}
+	}
+	if v := os.Getenv("WEBP_QUALITY"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			opts.Quality = n
+		}
+	}
+	return opts
+}
 
 // ---------------------------------------------------------------------------
 // Interfaces — allow unit tests to inject fakes without AWS credentials.
@@ -171,12 +215,20 @@ func processRecord(ctx context.Context, record events.SQSMessage, dbc DBClientIf
 		return fmt.Errorf("read body %s: %w", msg.ObjectKey, err)
 	}
 
-	// --- Passthrough copy to output bucket ---
-	// Phase 3: copy raw bytes as-is; Phase 6 will add resize/compress/watermark.
+	// --- Optimize: orient, resize, watermark, encode as WebP ---
 	filename := path.Base(msg.ObjectKey)
+	outData, contentType, optErr := optimizeFunc(data, loadOptions())
+	if optErr != nil {
+		// Unsupported/corrupt image: fall back to a passthrough copy.
+		log.Printf("jobId=%s workerType=image action=passthrough_fallback error=%v", msg.JobID, optErr)
+		outData = data
+		contentType = "application/octet-stream"
+	} else {
+		filename = strings.TrimSuffix(filename, path.Ext(filename)) + ".webp"
+	}
 	outputKey := fmt.Sprintf("output/%s/%s", msg.JobID, filename)
 
-	if err := sc.PutOutputObject(ctx, outputKey, data, "application/octet-stream"); err != nil {
+	if err := sc.PutOutputObject(ctx, outputKey, outData, contentType); err != nil {
 		_ = dbc.UpdateJobStatus(ctx, msg.JobID, models.StatusFailed)
 		return fmt.Errorf("putOutputObject %s: %w", outputKey, err)
 	}
@@ -186,8 +238,8 @@ func processRecord(ctx context.Context, record events.SQSMessage, dbc DBClientIf
 		return fmt.Errorf("set COMPLETE %s: %w", msg.JobID, err)
 	}
 
-	log.Printf("jobId=%s objectKey=%s outputKey=%s workerType=image status=COMPLETE bytes=%d",
-		msg.JobID, msg.ObjectKey, outputKey, len(data))
+	log.Printf("jobId=%s objectKey=%s outputKey=%s workerType=image status=COMPLETE origBytes=%d outBytes=%d ratio=%.2f contentType=%s",
+		msg.JobID, msg.ObjectKey, outputKey, len(data), len(outData), float64(len(outData))/float64(len(data)), contentType)
 
 	return nil
 }
