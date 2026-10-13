@@ -99,15 +99,14 @@ export function ProcessingStatus({
           const isFailed = status === "FAILED" && i === STATUS_STEPS.length - 1;
 
           return (
-            <div key={step} className="flex flex-1 flex-col items-center gap-1.5">
-              {/* Connector line (between circles) */}
+            <div key={step} className="relative flex flex-1 flex-col items-center gap-1.5">
+              {/* Connector line (between circles) – absolute so it never affects column layout */}
               {i > 0 && (
                 <div
                   className={cn(
-                    "absolute mt-3 h-0.5 w-full -translate-x-1/2 transition-colors duration-500",
+                    "absolute top-3.5 left-[calc(-50%+1.125rem)] h-0.5 w-[calc(100%-2.25rem)] -translate-y-1/2 transition-colors duration-500",
                     isDone ? "bg-primary/60" : "bg-border/50"
                   )}
-                  style={{ left: 0, position: "relative", flex: 1 }}
                 />
               )}
               {/* Circle */}

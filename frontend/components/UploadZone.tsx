@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -20,6 +20,7 @@ interface UploadZoneProps {
 
 const ACCEPTED = "image/*,video/*";
 const CLOUDFRONT = process.env.NEXT_PUBLIC_CLOUDFRONT_URL ?? "";
+const ACTIVE_JOB_KEY = "mpp_active_job_id";
 
 export function UploadZone({ onComplete }: UploadZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -33,7 +34,21 @@ export function UploadZone({ onComplete }: UploadZoneProps) {
     setUploadProgress(0);
     setActiveJobId(null);
     setErrorMessage(null);
+    try { localStorage.removeItem(ACTIVE_JOB_KEY); } catch { /* non-fatal */ }
     if (inputRef.current) inputRef.current.value = "";
+  }, []);
+
+  // Resume polling for a job that was in progress when the page was reloaded
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(ACTIVE_JOB_KEY);
+      if (stored) {
+        setActiveJobId(stored);
+        setPhase("processing");
+      }
+    } catch {
+      // localStorage unavailable — non-fatal
+    }
   }, []);
 
   const handleFile = useCallback(async (file: File) => {
@@ -102,6 +117,7 @@ export function UploadZone({ onComplete }: UploadZoneProps) {
       try {
         const stored = JSON.parse(localStorage.getItem("mpp_job_ids") ?? "[]") as string[];
         localStorage.setItem("mpp_job_ids", JSON.stringify([jobId, ...stored].slice(0, 50)));
+        localStorage.setItem(ACTIVE_JOB_KEY, jobId);
       } catch {
         // localStorage unavailable — non-fatal
       }
@@ -113,6 +129,7 @@ export function UploadZone({ onComplete }: UploadZoneProps) {
 
   const onJobComplete = useCallback(
     (jobId: string, outputKey: string, fileType: "image" | "video") => {
+      try { localStorage.removeItem(ACTIVE_JOB_KEY); } catch { /* non-fatal */ }
       setPhase("complete");
       const outputUrl = outputKey
         ? `https://${CLOUDFRONT}/${outputKey}`
@@ -123,6 +140,7 @@ export function UploadZone({ onComplete }: UploadZoneProps) {
   );
 
   const onJobFailed = useCallback(() => {
+    try { localStorage.removeItem(ACTIVE_JOB_KEY); } catch { /* non-fatal */ }
     setPhase("error");
     setErrorMessage("Processing failed. You can try uploading again.");
   }, []);

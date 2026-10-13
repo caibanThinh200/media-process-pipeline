@@ -18,6 +18,7 @@ Track bugs and regressions here. New features and roadmap ideas go in [VISION.md
 |----|-------|------|----------|--------|----------|
 | DEF-001 | Enhance frontend UI (Barlow font + gradient background) | frontend | Low | In Progress | 2026-10-05 |
 | DEF-002 | Uploaded image is not optimized (output identical to original) | backend | High | Investigating | 2026-10-05 |
+| DEF-003 | Job stuck in "processing" after page reload during upload | frontend | High | In Progress | 2026-10-11 |
 
 ## Resolved Defects
 
@@ -114,6 +115,35 @@ Track bugs and regressions here. New features and roadmap ideas go in [VISION.md
 - [ ] Gallery displays the output correctly.
 - [ ] Corrupt or unsupported input does not crash the worker (passthrough with warning).
 - [ ] `go test ./...` passes.
+
+---
+
+### DEF-003: Job stuck in "processing" after page reload during upload
+
+- **Area:** frontend
+- **Severity:** High
+- **Status:** In Progress (fix implemented, pending verification)
+- **Reported:** 2026-10-11
+
+**Steps to reproduce**
+1. Upload a file; wait until it reaches the worker (Processing).
+2. Reload the page.
+3. Open the Gallery.
+
+**Expected behavior**
+- The job status keeps updating and reaches COMPLETE/FAILED.
+
+**Actual behavior**
+- The file is saved but shows as processing forever.
+
+**Suspected cause / notes**
+- Backend workers update status correctly. The frontend polls only from in-memory state in `UploadZone`, lost on reload.
+- `gallery/page.tsx` fetched statuses once with no polling.
+- Reloading mid S3 upload (before the PUT finishes) can still leave a job PENDING; needs a backend TTL/reaper (not covered).
+
+**Fix plan**
+1. Gallery polls non-terminal jobs every 3s.
+2. `UploadZone` stores `mpp_active_job_id` and resumes polling on mount; cleared on complete/failed/reset.
 
 ---
 

@@ -75,6 +75,36 @@ export default function GalleryPage() {
     loadJobs();
   }, []);
 
+  // Keep polling while any job is still in progress, so status updates without a reload
+  const hasPending = useMemo(
+    () => jobs.some((j) => j.status !== "COMPLETE" && j.status !== "FAILED"),
+    [jobs]
+  );
+
+  useEffect(() => {
+    if (!hasPending) return;
+    const interval = setInterval(async () => {
+      const pendingIds = jobs
+        .filter((j) => j.status !== "COMPLETE" && j.status !== "FAILED")
+        .map((j) => j.jobId);
+      const results = await Promise.allSettled(
+        pendingIds.map(async (jobId) => {
+          const res = await fetch(`/api/job-status/${jobId}`);
+          if (!res.ok) throw new Error(`Failed to fetch ${jobId}`);
+          return (await res.json()) as StoredJob;
+        })
+      );
+      const updates = new Map<string, StoredJob>();
+      results.forEach((r) => {
+        if (r.status === "fulfilled") updates.set(r.value.jobId, r.value);
+      });
+      if (updates.size > 0) {
+        setJobs((prev) => prev.map((j) => updates.get(j.jobId) ?? j));
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [hasPending, jobs]);
+
   const filtered = useMemo(
     () => (filter === "ALL" ? jobs : jobs.filter((j) => j.status === filter)),
     [jobs, filter]
