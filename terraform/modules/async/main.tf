@@ -190,13 +190,20 @@ resource "aws_lambda_function" "image_worker" {
 #
 # batch_size=1         — process one job per invocation (simpler error isolation)
 # bisect_on_error=true — on batch failure, split and retry halves individually
+#
+# maximum_batching_window_in_seconds = 20
+#   Instructs the Lambda poller to use SQS long-polling (wait up to 20 s for
+#   messages before returning an empty response). This reduces idle
+#   ReceiveMessage API calls by ~20× compared to short-polling, cutting SQS
+#   costs significantly when the queue is quiet.
 ##############################################################################
 
 resource "aws_lambda_event_source_mapping" "sqs_to_image_worker" {
-  event_source_arn = var.queue_arn
-  function_name    = aws_lambda_function.image_worker.arn
-  batch_size       = var.sqs_batch_size
-  enabled          = true
+  event_source_arn                   = var.queue_arn
+  function_name                      = aws_lambda_function.image_worker.arn
+  batch_size                         = var.sqs_batch_size
+  maximum_batching_window_in_seconds = 20
+  enabled                            = false # re-enable when processing is needed
 
   function_response_types = ["ReportBatchItemFailures"]
 
